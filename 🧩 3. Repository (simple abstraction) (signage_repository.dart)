@@ -1,0 +1,12 @@
+import '../data/models/content_item.dart';
+import '../data/services/api_service.dart';
+
+class SignageRepository {
+  final ApiService apiService;
+
+  SignageRepository(this.apiService);
+
+  Future<List<ContentItem>> getPlaylist() {
+    return apiService.fetchContent();
+  }
+}
