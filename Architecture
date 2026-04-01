@@ -1,0 +1,11 @@
+lib/
+├── main.dart
+├── data/
+│   ├── models/
+│   │   └── content_item.dart
+│   ├── services/
+│   │   └── api_service.dart
+├── domain/
+│   └── signage_repository.dart
+├── presentation/
+│   └── signage_screen.dart
