@@ -1,0 +1,143 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+import '../data/models/content_item.dart';
+import '../domain/signage_repository.dart';
+
+class SignageScreen extends StatefulWidget {
+  final SignageRepository repository;
+
+  const SignageScreen({super.key, required this.repository});
+
+  @override
+  State<SignageScreen> createState() => _SignageScreenState();
+}
+
+class _SignageScreenState extends State<SignageScreen> {
+  List<ContentItem> _playlist = [];
+  int _currentIndex = 0;
+
+  Timer? _timer;
+  VideoPlayerController? _videoController;
+
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContent();
+  }
+
+  Future<void> _loadContent() async {
+    try {
+      final data = await widget.repository.getPlaylist();
+
+      setState(() {
+        _playlist = data;
+        _isLoading = false;
+      });
+
+      _startPlayback();
+    } catch (e) {
+      debugPrint("Error: $e");
+    }
+  }
+
+  void _startPlayback() {
+    _playCurrentItem();
+  }
+
+  void _playCurrentItem() {
+    _disposeVideo();
+
+    final item = _playlist[_currentIndex];
+
+    if (item.type == ContentType.video) {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(item.url),
+      )
+        ..initialize().then((_) {
+          _videoController?.play();
+          setState(() {});
+        });
+    }
+
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+
+    _timer = Timer(const Duration(seconds: 10), () {
+      _nextItem();
+    });
+  }
+
+  void _nextItem() {
+    _disposeVideo();
+
+    setState(() {
+      _currentIndex = (_currentIndex + 1) % _playlist.length;
+    });
+
+    _playCurrentItem();
+  }
+
+  void _disposeVideo() {
+    _videoController?.pause();
+    _videoController?.dispose();
+    _videoController = null;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _disposeVideo();
+    super.dispose();
+  }
+
+  Widget _buildContent() {
+    if (_playlist.isEmpty) {
+      return const Center(child: Text("No content"));
+    }
+
+    final item = _playlist[_currentIndex];
+
+    if (item.type == ContentType.image) {
+      return Image.network(
+        item.url,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) =>
+            const Center(child: Text("Image load error")),
+      );
+    } else {
+      if (_videoController == null ||
+          !_videoController!.value.isInitialized) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      return SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _videoController!.value.size.width,
+            height: _videoController!.value.size.height,
+            child: VideoPlayer(_videoController!),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildContent(),
+    );
+  }
+}
