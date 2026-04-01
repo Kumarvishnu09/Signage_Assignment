@@ -1,0 +1,28 @@
+1. Video longer than 10 sec
+
+Handled by:
+
+Timer(Duration(seconds: 10))
+
+We force stop, not wait for video end.
+
+2. Memory leaks (critical)
+
+We explicitly:
+
+_videoController?.dispose();
+_timer?.cancel();
+3. API fails
+
+Right now:
+
+Logs error
+Doesn’t crash
+
+You can improve with retry if needed.
+
+4. Black screen before video init
+
+Handled via:
+
+CircularProgressIndicator()
