@@ -1,0 +1,17 @@
+enum ContentType { image, video }
+
+class ContentItem {
+  final ContentType type;
+  final String url;
+
+  ContentItem({required this.type, required this.url});
+
+  factory ContentItem.fromJson(Map<String, dynamic> json) {
+    return ContentItem(
+      type: json['type'] == 'video'
+          ? ContentType.video
+          : ContentType.image,
+      url: json['url'],
+    );
+  }
+}
