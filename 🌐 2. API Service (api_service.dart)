@@ -1,0 +1,27 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/content_item.dart';
+
+class ApiService {
+  final String apiUrl;
+
+  ApiService(this.apiUrl);
+
+  Future<List<ContentItem>> fetchContent() async {
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        final List list = data['result'];
+
+        return list.map((e) => ContentItem.fromJson(e)).toList();
+      } else {
+        throw Exception('Failed to load content');
+      }
+    } catch (e) {
+      throw Exception('API error: $e');
+    }
+  }
+}
